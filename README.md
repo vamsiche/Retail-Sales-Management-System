@@ -1,4 +1,4 @@
-# Sales Management System
+# Retail Sales Management System
 
 A full-stack web application for managing and analyzing sales transactions with multi-select filters, built with FastAPI and NeonDB (PostgreSQL).
 
