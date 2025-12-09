@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Management System - Vault</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            min-width: 200px;
+        }
+        
+        .dropdown-menu.active {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .filter-badge {
+            background: #4f46e5;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0 h-full">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-900 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                    <i class="fa-solid fa-v"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-gray-900 text-sm">Vault</h1>
+                    <p class="text-xs text-gray-500">Sales Management</p>
+                </div>
+                <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-auto"></i>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li>
+                    <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 text-sm">
+                        <i class="fa-solid fa-chart-line w-4"></i> Dashboard
+                    </a>
+                </li>
+                <li class="mt-4">
+                    <div class="flex items-center justify-between px-4 py-2 text-gray-400 text-xs uppercase font-semibold cursor-pointer">
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-folder w-4"></i> Services</span>
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </div>
+                    <ul class="pl-10 pr-2 space-y-1 mt-1">
+                        <li>
+                            <a href="#" class="flex items-center gap-2 px-2 py-1.5 text-gray-900 bg-gray-200 rounded-md text-sm font-medium">
+                                <i class="fa-solid fa-pause text-xs"></i> Active
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full bg-white overflow-hidden">
+        
+        <header class="border-b border-gray-200 px-6 py-4 flex-shrink-0">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Retail Sales Management System</h2>
+                <div class="relative w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Name, Phone no." 
+                           class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <button onclick="refreshData()" class="p-2 text-gray-500 hover:text-gray-700">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                
+                <div class="flex gap-2 text-sm flex-wrap">
+                    <!-- Customer Region Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('region')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Customer Region 
+                            <span id="regionBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="regionDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Gender Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('gender')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Gender 
+                            <span id="genderBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="genderDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Age Range Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('ageRange')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Age Range 
+                            <span id="ageRangeBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="ageRangeDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Product Category Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('category')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Product Category 
+                            <span id="categoryBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="categoryDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Tags Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('tags')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Tags 
+                            <span id="tagsBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="tagsDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Payment Method Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('payment')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Payment Method 
+                            <span id="paymentBadge" class="filter-badge" style="display:none;">0</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="paymentDropdown" class="dropdown-menu"></div>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="relative">
+                        <button onclick="toggleDropdown('date')" class="bg-gray-100 px-3 py-1.5 rounded text-gray-600 flex items-center gap-2 hover:bg-gray-200">
+                            Date <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="dateDropdown" class="dropdown-menu p-3">
+                            <div class="mb-2">
+                                <label class="text-xs text-gray-600">Start Date</label>
+                                <input type="date" id="startDate" class="w-full border rounded px-2 py-1 text-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="text-xs text-gray-600">End Date</label>
+                                <input type="date" id="endDate" class="w-full border rounded px-2 py-1 text-sm">
+                            </div>
+                            <button onclick="applyDateFilter()" class="w-full bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml-auto flex items-center gap-2 text-sm text-gray-500">
+                    <span>Sort by:</span>
+                    <select id="sortSelect" onchange="applySort()" class="font-medium text-gray-700 border-none focus:outline-none cursor-pointer">
+                        <option value="customer_name:asc">Customer Name (A-Z)</option>
+                        <option value="customer_name:desc">Customer Name (Z-A)</option>
+                        <option value="date:desc">Date (Newest)</option>
+                        <option value="date:asc">Date (Oldest)</option>
+                        <option value="total_amount:desc">Amount (High-Low)</option>
+                        <option value="total_amount:asc">Amount (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="flex gap-4">
+                <div class="border border-gray-200 rounded p-3 w-40">
+                    <div class="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        Total units sold <i class="fa-regular fa-circle-question"></i>
+                    </div>
+                    <div class="font-bold text-gray-900 text-lg" id="totalUnits">0</div>
+                </div>
+                <div class="border border-gray-200 rounded p-3 w-48">
+                    <div class="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        Total Amount <i class="fa-regular fa-circle-question"></i>
+                    </div>
+                    <div class="font-bold text-gray-900 text-lg">
+                        ₹<span id="totalAmount">0</span> 
+                        <span class="text-xs font-normal text-gray-500">(<span id="totalTransactions">0</span> Txns)</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded p-3 w-48">
+                    <div class="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        Total Discount <i class="fa-regular fa-circle-question"></i>
+                    </div>
+                    <div class="font-bold text-gray-900 text-lg">₹<span id="totalDiscount">0</span></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Data Table -->
+        <div class="flex-1 overflow-auto bg-white">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer ID</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer name</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Region</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Product Category</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Quantity</th>
+                        <th class="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+            <div id="loadingIndicator" class="text-center py-8 text-gray-500">
+                <i class="fa-solid fa-spinner fa-spin text-2xl"></i>
+                <p class="mt-2">Loading data...</p>
+            </div>
+            <div id="noDataIndicator" class="text-center py-8 text-gray-500" style="display:none;">
+                <i class="fa-solid fa-inbox text-2xl"></i>
+                <p class="mt-2">No data found</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Pagination settings
+        const PAGE_SIZE = 50;
+        let currentPage = 0;
+        let totalRecords = 0;
+
+        // Global state for filters
+        const filters = {
+            customer_regions: [],
+            genders: [],
+            age_ranges: [],
+            product_categories: [],
+            tags: [],
+            payment_methods: [],
+            start_date: null,
+            end_date: null,
+            search: ''
+        };
+
+        const filterOptions = {};
+        let currentSort = { by: 'customer_name', order: 'asc' };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFilterOptions();
+            loadData();
+            
+            // Search with debounce
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filters.search = e.target.value;
+                    loadData();
+                }, 500);
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.relative')) {
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.classList.remove('active');
+                    });
+                }
+            });
+        });
+
+        // Load filter options from API
+        async function loadFilterOptions() {
+            try {
+                const response = await fetch('/api/filters/options');
+                const data = await response.json();
+                filterOptions.regions = data.customer_regions;
+                filterOptions.genders = data.genders;
+                filterOptions.ageRanges = data.age_ranges;
+                filterOptions.categories = data.product_categories;
+                filterOptions.tags = data.tags;
+                filterOptions.paymentMethods = data.payment_methods;
+                
+                populateDropdowns();
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+            }
+        }
+
+        // Populate dropdown menus
+        function populateDropdowns() {
+            populateDropdown('regionDropdown', filterOptions.regions, 'customer_regions');
+            populateDropdown('genderDropdown', filterOptions.genders, 'genders');
+            populateDropdown('ageRangeDropdown', filterOptions.ageRanges, 'age_ranges');
+            populateDropdown('categoryDropdown', filterOptions.categories, 'product_categories');
+            populateDropdown('tagsDropdown', filterOptions.tags, 'tags');
+            populateDropdown('paymentDropdown', filterOptions.paymentMethods, 'payment_methods');
+        }
+
+        function populateDropdown(elementId, options, filterKey) {
+            const dropdown = document.getElementById(elementId);
+            dropdown.innerHTML = '';
+            
+            options.forEach(option => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="${filterKey}_${option}" value="${option}" 
+                           onchange="toggleFilter('${filterKey}', '${option}')">
+                    <label for="${filterKey}_${option}" class="cursor-pointer flex-1">${option}</label>
+                `;
+                dropdown.appendChild(div);
+            });
+        }
+
+        // Toggle dropdown visibility
+        function toggleDropdown(type) {
+            const dropdowns = {
+                'region': 'regionDropdown',
+                'gender': 'genderDropdown',
+                'ageRange': 'ageRangeDropdown',
+                'category': 'categoryDropdown',
+                'tags': 'tagsDropdown',
+                'payment': 'paymentDropdown',
+                'date': 'dateDropdown'
+            };
+            
+            const dropdownId = dropdowns[type];
+            const dropdown = document.getElementById(dropdownId);
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (menu.id !== dropdownId) {
+                    menu.classList.remove('active');
+                }
+            });
+            
+            dropdown.classList.toggle('active');
+            event.stopPropagation();
+        }
+
+        // Toggle individual filter selection
+        function toggleFilter(filterKey, value) {
+            const index = filters[filterKey].indexOf(value);
+            if (index > -1) {
+                filters[filterKey].splice(index, 1);
+            } else {
+                filters[filterKey].push(value);
+            }
+            
+            updateBadge(filterKey);
+            currentPage = 0;
+            loadData();
+        }
+
+        // Update filter badge count
+        function updateBadge(filterKey) {
+            const badges = {
+                'customer_regions': 'regionBadge',
+                'genders': 'genderBadge',
+                'age_ranges': 'ageRangeBadge',
+                'product_categories': 'categoryBadge',
+                'tags': 'tagsBadge',
+                'payment_methods': 'paymentBadge'
+            };
+            
+            const badgeId = badges[filterKey];
+            if (badgeId) {
+                const badge = document.getElementById(badgeId);
+                const count = filters[filterKey].length;
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // Apply date filter
+        function applyDateFilter() {
+            filters.start_date = document.getElementById('startDate').value;
+            filters.end_date = document.getElementById('endDate').value;
+            document.getElementById('dateDropdown').classList.remove('active');
+            currentPage = 0;
+            loadData();
+        }
+
+        // Apply sort
+        function applySort() {
+            const sortValue = document.getElementById('sortSelect').value;
+            const [by, order] = sortValue.split(':');
+            currentSort = { by, order };
+            currentPage = 0;
+            loadData();
+        }
+
+        // Load data from API
+        async function loadData() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('noDataIndicator').style.display = 'none';
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                
+                filters.customer_regions.forEach(r => params.append('customer_regions', r));
+                filters.genders.forEach(g => params.append('genders', g));
+                filters.age_ranges.forEach(a => params.append('age_ranges', a));
+                filters.product_categories.forEach(c => params.append('product_categories', c));
+                filters.tags.forEach(t => params.append('tags', t));
+                filters.payment_methods.forEach(p => params.append('payment_methods', p));
+                
+                if (filters.start_date) params.append('start_date', filters.start_date);
+                if (filters.end_date) params.append('end_date', filters.end_date);
+                if (filters.search) params.append('search', filters.search);
+                
+                params.append('sort_by', currentSort.by);
+                params.append('sort_order', currentSort.order);
+                params.append('limit', PAGE_SIZE.toString()); // smaller page size for faster load
+                params.append('offset', (currentPage * PAGE_SIZE).toString());
+                
+                // Fetch data
+                const [dataResponse, statsResponse] = await Promise.all([
+                    fetch(`/api/transactions?${params.toString()}`),
+                    fetch(`/api/statistics?${params.toString()}`)
+                ]);
+                
+                const data = await dataResponse.json();
+                const stats = await statsResponse.json();
+                totalRecords = data.total || 0;
+                
+                // Update statistics
+                document.getElementById('totalUnits').textContent = stats.total_units.toLocaleString();
+                document.getElementById('totalAmount').textContent = stats.total_amount.toLocaleString('en-IN');
+                document.getElementById('totalDiscount').textContent = stats.total_discount.toLocaleString('en-IN');
+                document.getElementById('totalTransactions').textContent = stats.total_transactions;
+                updatePagination();
+                
+                // Update table
+                const tbody = document.getElementById('dataTableBody');
+                tbody.innerHTML = '';
+                
+                if (data.data.length === 0) {
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('noDataIndicator').style.display = 'block';
+                    return;
+                }
+                
+                data.data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-400">${row.transaction_id}</td>
+                        <td class="py-4 px-6">${row.date}</td>
+                        <td class="py-4 px-6 font-semibold text-gray-800">${row.customer_id}</td>
+                        <td class="py-4 px-6 font-semibold text-gray-800">${row.customer_name}</td>
+                        <td class="py-4 px-6 flex items-center gap-2">
+                            ${row.phone_number} 
+                            <i class="fa-regular fa-copy cursor-pointer text-gray-400 hover:text-gray-600" 
+                               onclick="copyToClipboard('${row.phone_number}')"></i>
+                        </td>
+                        <td class="py-4 px-6">${row.gender}</td>
+                        <td class="py-4 px-6">${row.age}</td>
+                        <td class="py-4 px-6">${row.customer_region}</td>
+                        <td class="py-4 px-6 font-medium text-gray-800">${row.product_category}</td>
+                        <td class="py-4 px-6 font-bold text-gray-900 text-right">${row.quantity}</td>
+                        <td class="py-4 px-6 font-bold text-gray-900 text-right">₹${row.total_amount.toLocaleString('en-IN')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                document.getElementById('loadingIndicator').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <i class="fa-solid fa-exclamation-triangle text-2xl text-red-500"></i>
+                    <p class="mt-2 text-red-600">Error loading data. Please check your database connection.</p>
+                `;
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            // Reset all filters
+            filters.customer_regions = [];
+            filters.genders = [];
+            filters.age_ranges = [];
+            filters.product_categories = [];
+            filters.tags = [];
+            filters.payment_methods = [];
+            filters.start_date = null;
+            filters.end_date = null;
+            filters.search = '';
+            currentPage = 0;
+            
+            // Reset UI
+            document.getElementById('searchInput').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.filter-badge').forEach(badge => badge.style.display = 'none');
+            
+            loadData();
+        }
+
+        // Pagination controls
+        function changePage(delta) {
+            const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+            const next = currentPage + delta;
+            if (next < 0 || next >= totalPages) return;
+            currentPage = next;
+            loadData();
+        }
+
+        function updatePagination() {
+            const info = document.getElementById('paginationInfo');
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            if (!info || !prevBtn || !nextBtn) return;
+            const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+            info.textContent = `Page ${totalPages === 0 ? 0 : currentPage + 1} of ${totalPages}`;
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage >= totalPages - 1;
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+        }
+    </script>
+</body>
+</html>
